@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Comandas PWA - Demo</title>
+
+  <!-- Manifest -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Meta para modo tela cheia em iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Comandas PWA">
+
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 1.2rem; }
+    header { display:flex; align-items:center; gap:12px; }
+    .mesa { border:1px solid #ddd; padding:12px; border-radius:8px; margin:8px 0;}
+    button { padding:8px 12px; border-radius:6px; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="/icon.svg" alt="icon" width="48" height="48">
+    <h1>Comandas PWA (Demo)</h1>
+  </header>
+
+  <p>Este é um PWA mínimo para controle de comandas. Use como base para desenvolver.</p>
+
+  <section>
+    <h2>Mesas rápidas</h2>
+    <div id="mesas"></div>
+    <button id="novaMesa">Abrir nova comanda</button>
+  </section>
+
+  <script>
+    // Lógica mínima: criar mesas/commandas no storage do navegador
+    const mesasEl = document.getElementById('mesas');
+    const nova = document.getElementById('novaMesa');
+
+    function salvar(mesas) { localStorage.setItem('mesas', JSON.stringify(mesas)); }
+    function carregar() { return JSON.parse(localStorage.getItem('mesas') || '[]'); }
+
+    function render() {
+      const mesas = carregar();
+      mesasEl.innerHTML = '';
+      mesas.forEach((m, i) => {
+        const d = document.createElement('div');
+        d.className = 'mesa';
+        d.innerHTML = `<strong>Comanda #${i+1}</strong><div>Produtos: ${m.produtos.length}</div>
+          <div>Total: R$ ${m.total.toFixed(2)}</div>
+          <button onclick="fechar(${i})">Fechar</button>`;
+        mesasEl.appendChild(d);
+      });
+    }
+
+    function abrir() {
+      const mesas = carregar();
+      mesas.push({ produtos: [], total: 0 });
+      salvar(mesas);
+      render();
+    }
+
+    function fechar(index) {
+      const mesas = carregar();
+      mesas.splice(index,1);
+      salvar(mesas);
+      render();
+    }
+
+    nova.addEventListener('click', abrir);
+    render();
+
+    // Registrar service worker (para offline)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registro falhou:', err));
+    }
+  </script>
+</body>
+</html>
